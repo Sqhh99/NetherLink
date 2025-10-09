@@ -40,16 +40,26 @@ target_link_libraries(NetherLink-Client PRIVATE
         user32
 )
 
-target_compile_options(NetherLink-Client PRIVATE
-    -Wall
-    -Wextra
-    # -Werror
-    -Wbuiltin-macro-redefined
-    -Wunused-variable
-    -Wunused-function
-    -pedantic
-    -O3
-)
+if(MSVC)
+    # MSVC 编译选项
+    target_compile_options(NetherLink-Client PRIVATE
+        /W4       # 对应 -Wall 和 -Wextra
+        /permissive- # 对应 -pedantic
+        # /WX       # 对应 -Werror
+    )
+else()
+    # GCC/Clang 编译选项
+    target_compile_options(NetherLink-Client PRIVATE
+        -Wall
+        -Wextra
+        # -Werror
+        -Wbuiltin-macro-redefined
+        -Wunused-variable
+        -Wunused-function
+        -pedantic
+        -O3
+    )
+endif()
 
 set_target_properties(NetherLink-Client PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

@@ -1,27 +1,24 @@
 /* include ---------------------------------------------------------------- 80 // ! ----------------------------- 120 */
 
-#include <QMouseEvent>
-
 #include "Utils/FramelessWindow.h"
+#include <QMouseEvent>
+#include <QGuiApplication>
+#include <QScreen>
+#include <QRect>
+#include <QWindow>
+#include <QDebug>
+
+#ifdef Q_OS_WIN
+#include <windows.h>
+#include <windowsx.h>
+#include <dwmapi.h>
+
+#pragma comment(lib, "dwmapi.lib")
+#pragma comment(lib, "user32.lib")
+#endif
 
 /* variable --------------------------------------------------------------- 80 // ! ----------------------------- 120 */
 constexpr int RESIZE_WINDOW_WIDTH = 8;
-
-/* enum ------------------------------------------------------------------- 80 // ! ----------------------------- 120 */
-
-// 如果 DWMWA_WINDOW_CORNER_PREFERENCE 未定义，则手动声明
-#ifndef DWMWA_WINDOW_CORNER_PREFERENCE
-
-// 枚举值定义参考 Windows 11 SDK dwmapi.h
-enum DWM_WINDOW_CORNER_PREFERENCE {
-    DWMWCP_DEFAULT = 0,     // 系统决定是否圆角
-    DWMWCP_DONOTROUND = 1, // 不圆角
-    DWMWCP_ROUND = 2, // 常规圆角
-    DWMWCP_ROUNDSMALL = 3 // 小半径圆角
-};
-
-static const DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;  // 窗口圆角策略标识符
-#endif
 
 /* function --------------------------------------------------------------- 80 // ! ----------------------------- 120 */
 
