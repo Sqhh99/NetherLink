@@ -53,5 +53,6 @@
         <file>icon/selected_message.png</file>
         <file>icon/shears.png</file>
         <file>icon/unselected_nether.png</file>
+        <file>icon/gemini_color_icon.png</file>
     </qresource>
 </RCC>

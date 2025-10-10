@@ -74,6 +74,14 @@ QDateTime AiChatListItem::time() const {
     return (m_time);
 }
 
+void AiChatListItem::setConversationId(const QString& conversationId) {
+    m_conversationId = conversationId;
+}
+
+QString AiChatListItem::conversationId() const {
+    return m_conversationId;
+}
+
 bool AiChatListItem::operator<(const AiChatListItem& other) const {
     return (m_time < other.m_time);
 }

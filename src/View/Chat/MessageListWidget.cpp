@@ -39,9 +39,13 @@ void MessageListWidget::updateMessages() {
 
     qDebug() << "updateMessages users size " << users.size();
 
+    // 用于去重的集合
+    QSet<QString> addedGroups;
+    QSet<QString> addedUsers;
+
     // 创建所有消息项
     for (const auto& group : groups) {
-        auto data = QSharedPointer <MessageData>::create();
+        auto data = QSharedPointer<MessageData>::create();
 
         data->id = group.groupId;
         data->senderId = group.groupId;
@@ -66,15 +70,16 @@ void MessageListWidget::updateMessages() {
     }
 
     for (const auto& user : users) {
-        auto data = QSharedPointer <MessageData>::create();
+        // 跳过当前用户自己
+        if (user.id == CurrentUser::instance().getUserId())
+            continue;
+
+        auto data = QSharedPointer<MessageData>::create();
 
         data->id = user.id;
         data->senderId = user.id;
         data->senderName = user.nick;
         data->isGroup = false;
-
-        if (user.id == CurrentUser::instance().getUserId())
-            continue;
 
         // 获取最后一条消息
         auto lastMsg = mr.getLastMessage(user.id, false);
@@ -95,11 +100,12 @@ void MessageListWidget::updateMessages() {
     }
 
     // 按时间排序
-    std::sort(m_items.begin(), m_items.end(), [] (MessageListItem* a, MessageListItem* b) {
+    std::sort(m_items.begin(), m_items.end(), [](MessageListItem* a, MessageListItem* b) {
         return (a->getData()->timestamp > b->getData()->timestamp);
     });
     layoutContent();
 }
+
 
 void MessageListWidget::addMessage(const MessageDataPtr& data) {
     auto* item = new MessageListItem(data, contentWidget);

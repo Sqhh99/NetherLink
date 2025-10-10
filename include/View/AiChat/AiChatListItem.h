@@ -24,6 +24,10 @@ class AiChatListItem : public QWidget {
 
         QDateTime time() const;
 
+        void setConversationId(const QString& conversationId);
+
+        QString conversationId() const;
+
         void setSelected(bool select);
 
         bool isSelected();
@@ -52,6 +56,7 @@ class AiChatListItem : public QWidget {
 
     private:
         QString m_title;
+        QString m_conversationId;
         QDateTime m_time;
         bool m_hovered = false;
         bool m_pressed = false;

@@ -21,7 +21,7 @@ const QString docStyleSheet = "h1 { font-size: 20px; font-weight: bold; margin: 
 AiChatItemDelegate::AiChatItemDelegate(QWidget* parent) : QStyledItemDelegate(parent) {
     // 使用静态头像
     m_userAvatar = AvatarLoader::instance().getAvatar(CurrentUser::instance().getUserId());
-    m_aiAvatar.load(":/icon/ds.png");
+    m_aiAvatar.load(":/icon/gemini_color_icon.png");
 
     // 缩放头像到指定大小
     if (!m_userAvatar.isNull()) {

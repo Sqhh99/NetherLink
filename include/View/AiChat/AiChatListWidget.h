@@ -17,6 +17,8 @@ class AiChatListWidget : public CustomScrollArea {
 
         void addChatItem(AiChatListItem*);
 
+        void loadConversations();
+
     signals:
         void chatItemClicked(AiChatListItem* item);
 

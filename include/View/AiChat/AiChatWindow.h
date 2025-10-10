@@ -18,6 +18,9 @@ class AiChatWindow : public QWidget {
 
     public:
         explicit AiChatWindow(QWidget* parent = nullptr);
+        explicit AiChatWindow(const QString& conversationId, QWidget* parent = nullptr);
+
+        void loadConversation(const QString& conversationId);
 
     protected:
         void resizeEvent(QResizeEvent* event) override;
@@ -42,12 +45,19 @@ class AiChatWindow : public QWidget {
 
         void updateInputBarPosition();
 
+        void saveMessage(const QString& role, const QString& content);
+
+        void loadHistoryMessages();
+
         QVBoxLayout* m_mainLayout;
         AiChatListView* m_chatView;
         FloatingInputBar* m_inputBar;
         AiChatWebSocket* m_webSocket;
         AiChatListModel* m_model;
         QString m_currentConversationId;
+        QString m_pendingAiMessage; // 用于累积AI流式响应
+        QString m_firstUserMessage; // 用于保存第一条用户消息作为标题
+        bool m_isNewConversation;   // 标记是否是新对话
         static constexpr int INPUT_BAR_MARGIN = 20; // 输入栏与边缘的距离
 };
 

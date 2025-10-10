@@ -4,6 +4,8 @@
 #include <QScrollBar>
 
 #include "View/AiChat/AiChatListWidget.h"
+#include "Data/AiChatRepository.h"
+#include "Data/CurrentUser.h"
 
 /* function --------------------------------------------------------------- 80 // ! ----------------------------- 120 */
 
@@ -16,23 +18,34 @@ AiChatListWidget::AiChatListWidget(QWidget* parent) : CustomScrollArea(parent) {
     // 安装事件过滤器以处理滚动事件
     viewport()->installEventFilter(this);
 
-    // 随机生成 40 条示例对话
-    QDateTime now = QDateTime::currentDateTime();
+    // 加载真实的对话历史
+    loadConversations();
+    layoutContent();
+}
 
-    for (int i = 0; i < 20; ++i) {
-        // 随机生成 0~365 天的偏移
-        int offsetDays = QRandomGenerator::global()->bounded(0, 20);
-        QDateTime dt = now.addDays(-offsetDays);
+void AiChatListWidget::loadConversations() {
+    // 清空现有项
+    qDeleteAll(m_items);
+    m_items.clear();
+
+    // 从数据库加载对话列表
+    QString userId = CurrentUser::instance().getUserId();
+    if (userId.isEmpty()) {
+        qWarning() << "用户未登录，无法加载AI对话";
+        return;
+    }
+
+    auto conversations = AiChatRepository::instance().getAllConversations(userId);
+    
+    qDebug() << "加载了" << conversations.size() << "个AI对话";
+
+    for (const auto& conv : conversations) {
         AiChatListItem* item = new AiChatListItem(content);
-
-        // 标题中附加日期，格式如 "示例对话 1 2025-05-19"
-        QString dateStr = dt.toString("yyyy-MM-dd");
-
-        item->setTitle(QString("示例对话 %1").arg(dateStr));
-        item->setTime(dt);
+        item->setTitle(conv.title);
+        item->setTime(conv.updatedAt);
+        item->setConversationId(conv.conversationId);  // 需要添加这个方法
         addChatItem(item);
     }
-    layoutContent();
 }
 
 void AiChatListWidget::addChatItem(AiChatListItem* item) {
