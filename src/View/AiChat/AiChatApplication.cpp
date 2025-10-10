@@ -42,6 +42,13 @@ void AiChatApplication::onChatItemClicked(AiChatListItem* item) {
         auto* chatWindow = new AiChatWindow(conversationId, this);
         m_rightPane->addWidget(chatWindow);
         m_chatWindows[conversationId] = chatWindow;
+
+        // 如果是新对话（conversationId为空），连接信号来更新item标题
+        if (conversationId.isEmpty()) {
+            connect(chatWindow, &AiChatWindow::conversationCreated, this, [this, item](const QString& convId, const QString& title) {
+                onConversationCreated(item, convId, title);
+            });
+        }
     }
     m_rightPane->setCurrentWidget(m_chatWindows[conversationId]);
 }
@@ -69,4 +76,18 @@ void AiChatApplication::onChatItemDeleted(AiChatListItem* item) {
     }
     
     qDebug() << "对话删除成功:" << conversationId;
+}
+
+void AiChatApplication::onConversationCreated(AiChatListItem* item, const QString& conversationId, const QString& title) {
+    // 更新item的标题和conversationId
+    item->setTitle(title);
+    item->setConversationId(conversationId);
+
+    // 更新窗口映射的key
+    if (m_chatWindows.contains("")) {
+        auto* chatWindow = m_chatWindows.take("");
+        m_chatWindows[conversationId] = chatWindow;
+    }
+
+    qDebug() << "对话创建完成，更新UI:" << conversationId << title;
 }

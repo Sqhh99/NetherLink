@@ -33,6 +33,8 @@ class AiChatApplication : public QWidget {
 
         void onChatItemDeleted(AiChatListItem* item);
 
+        void onConversationCreated(AiChatListItem* item, const QString& conversationId, const QString& title);
+
     private:
 
         class LeftPane : public QWidget {
@@ -69,12 +71,12 @@ class AiChatApplication : public QWidget {
                     // 设置列表样式
                     m_aiChatList->setStyleSheet("border-width:0px; border-style:solid;");
                     connect(m_button, &QPushButton::clicked, [this] () {
-                auto* item = new AiChatListItem(m_aiChatList);
-                item->setTitle("新对话");
-                item->setTime(QDateTime::currentDateTime());
-                m_aiChatList->addChatItem(item);
-                NotificationManager::instance().showMessage("新建成功！", NotificationManager::Success, MainWindow::getInstance());
-            });
+                        auto* item = new AiChatListItem(m_aiChatList);
+                        item->setTitle("新对话");
+                        item->setTime(QDateTime::currentDateTime());
+                        m_aiChatList->addChatItem(item);
+                        NotificationManager::instance().showMessage("新建成功！", NotificationManager::Success, MainWindow::getInstance());
+                    });
                 }
 
                 AiChatListWidget* chatList() const {

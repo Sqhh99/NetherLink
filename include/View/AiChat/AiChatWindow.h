@@ -22,6 +22,9 @@ class AiChatWindow : public QWidget {
 
         void loadConversation(const QString& conversationId);
 
+    signals:
+        void conversationCreated(const QString& conversationId, const QString& title);
+
     protected:
         void resizeEvent(QResizeEvent* event) override;
 

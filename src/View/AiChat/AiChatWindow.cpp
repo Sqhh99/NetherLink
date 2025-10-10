@@ -234,6 +234,9 @@ void AiChatWindow::onConversationStarted(const QString& conversationId) {
         
         m_isNewConversation = false;
         qDebug() << "创建新对话完成:" << m_currentConversationId << "标题:" << title;
+
+        // 发射信号通知UI更新标题
+        emit conversationCreated(m_currentConversationId, title);
     } else if (!conversationId.isEmpty() && conversationId != m_currentConversationId) {
         // 如果服务器返回了不同的conversationId，更新它
         qDebug() << "更新conversationId:" << m_currentConversationId << "->" << conversationId;
