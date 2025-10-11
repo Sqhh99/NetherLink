@@ -50,6 +50,7 @@ void FloatingInputBar::initUI() {
     m_emojiLabel = new QLabel(this);
     m_imageLabel = new QLabel(this);
     m_screenshotLabel = new QLabel(this);
+    m_videoLabel = new QLabel(this);
     m_historyLabel = new QLabel(this);
 
     // 设置标签大小
@@ -57,6 +58,7 @@ void FloatingInputBar::initUI() {
 
     m_emojiLabel->setFixedSize(buttonSize);
     m_imageLabel->setFixedSize(buttonSize);
+    m_videoLabel->setFixedSize(buttonSize);
     m_screenshotLabel->setFixedSize(buttonSize);
     m_historyLabel->setFixedSize(buttonSize);
 
@@ -66,15 +68,18 @@ void FloatingInputBar::initUI() {
     updateLabelIcon(m_emojiLabel, "skull.png", "hovered_skull.png", iconSize);
     updateLabelIcon(m_imageLabel, "painting.png", "hovered_painting.png", iconSize);
     updateLabelIcon(m_screenshotLabel, "shears.png", "hovered_shears.png", iconSize);
+    updateLabelIcon(m_videoLabel, "video.png", "hovered_video.png", iconSize);
     updateLabelIcon(m_historyLabel, "clock.png", "hovered_clock.png", iconSize);
 
     // 设置鼠标样式
     m_emojiLabel->setCursor(Qt::PointingHandCursor);
     m_imageLabel->setCursor(Qt::PointingHandCursor);
+    m_videoLabel->setCursor(Qt::PointingHandCursor);
     m_screenshotLabel->setCursor(Qt::PointingHandCursor);
     m_historyLabel->setCursor(Qt::PointingHandCursor);
     m_emojiLabel->installEventFilter(this);
     m_imageLabel->installEventFilter(this);
+    m_videoLabel->installEventFilter(this);
     m_screenshotLabel->installEventFilter(this);
     m_historyLabel->installEventFilter(this);
 
@@ -82,6 +87,7 @@ void FloatingInputBar::initUI() {
     toolbarLayout->addWidget(m_emojiLabel);
     toolbarLayout->addWidget(m_imageLabel);
     toolbarLayout->addWidget(m_screenshotLabel);
+    toolbarLayout->addWidget(m_videoLabel);
     toolbarLayout->addStretch();
     toolbarLayout->addWidget(m_historyLabel);
 
@@ -217,6 +223,8 @@ bool FloatingInputBar::eventFilter(QObject*watched, QEvent*event) {
                 showTooltip(label, "图片");
             } else if (label == m_screenshotLabel) {
                 showTooltip(label, "截图");
+            } else if (label == m_videoLabel) {
+                showTooltip(label, "视频");
             } else if (label == m_historyLabel) {
                 showTooltip(label, "历史");
             } else if (label == m_sendLabel) {

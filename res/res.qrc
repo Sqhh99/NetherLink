@@ -54,5 +54,15 @@
         <file>icon/shears.png</file>
         <file>icon/unselected_nether.png</file>
         <file>icon/gemini_color_icon.png</file>
+        <file>icon/answer.png</file>
+        <file>icon/close_video.png</file>
+        <file>icon/hang_up.png</file>
+        <file>icon/mute_the_microphone.png</file>
+        <file>icon/start_video.png</file>
+        <file>icon/Turn_on_the_microphone.png</file>
+        <file>icon/video.png</file>
+        <file>icon/yizhiding.png</file>
+        <file>icon/zhiding.png</file>
+        <file>icon/hovered_video.png</file>
     </qresource>
 </RCC>

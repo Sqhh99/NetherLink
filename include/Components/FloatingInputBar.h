@@ -49,6 +49,7 @@ class FloatingInputBar : public QWidget {
         QTextEdit*m_inputEdit;
         QLabel*m_emojiLabel;
         QLabel*m_imageLabel;
+        QLabel*m_videoLabel;
         QLabel*m_screenshotLabel;
         QLabel*m_historyLabel;
         QLabel*m_sendLabel;
