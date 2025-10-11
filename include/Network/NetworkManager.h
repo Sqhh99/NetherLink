@@ -29,6 +29,8 @@ class NetworkManager : public QObject {
 
         void syncOfflineMessages(int page = 1, int pageSize = 100);
 
+        void confirmMessagesSynced(const QList<qint64>& messageIds);
+
         // Contacts
         void reloadContacts();
 

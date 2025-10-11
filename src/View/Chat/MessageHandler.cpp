@@ -110,8 +110,14 @@ void MessageHandler::handleOfflineMessages(const QJsonObject& messageObj) {
 
     qDebug() << "收到离线消息，共" << count << "条";
 
+    QList<qint64> messageIds;  // 收集message_ids用于确认，使用qint64处理大整数
+
     for (const QJsonValue& value : messagesArray) {
         QJsonObject msgObj = value.toObject();
+        
+        // 收集message_id，使用qint64处理大整数
+        qint64 messageId = msgObj["message_id"].toVariant().toLongLong();
+        messageIds.append(messageId);
         
         // 构造payload对象，模拟接收到的聊天消息格式
         QJsonObject chatPayload;
@@ -123,7 +129,7 @@ void MessageHandler::handleOfflineMessages(const QJsonObject& messageObj) {
         
         // 解析conversation_id，判断是否群聊
         QString conversationId = msgObj["conversation_id"].toString();
-        bool isGroup = conversationId.startsWith("group_");  // 假设群聊ID以group_开头
+        bool isGroup = conversationId.startsWith("group_") && !conversationId.isEmpty();
         chatPayload["is_group"] = isGroup;
         if (isGroup) {
             chatPayload["conversation"] = conversationId;
@@ -135,6 +141,11 @@ void MessageHandler::handleOfflineMessages(const QJsonObject& messageObj) {
         chatMessageObj["payload"] = chatPayload;
         
         handleReceivedMessage(chatMessageObj);
+    }
+
+    // 处理完成后，发送确认消息已同步
+    if (!messageIds.isEmpty()) {
+        NetworkManager::instance().confirmMessagesSynced(messageIds);
     }
 
     // 如果还有更多消息，继续请求下一页

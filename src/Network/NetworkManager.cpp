@@ -207,6 +207,13 @@ void NetworkManager::onWssTextMessage(const QString& msg) {
     } else if (type == "offline_messages") {
         // 处理离线消息同步
         MessageHandler::instance().handleOfflineMessages(obj);
+    } else if (type == "confirm_messages_synced_response") {
+        // 处理确认消息同步响应
+        QJsonObject payload = obj["payload"].toObject();
+        bool success = payload["success"].toBool();
+        QString message = payload["message"].toString();
+        int count = payload["count"].toInt();
+        qDebug() << "消息同步确认响应:" << success << message << "处理了" << count << "条消息";
     } else if (type == "friend_request_response") {
         // 处理好友请求响应
         QJsonObject payload = obj["payload"].toObject();
@@ -261,6 +268,24 @@ void NetworkManager::syncOfflineMessages(int page, int pageSize) {
 
     QJsonObject wsMessage;
     wsMessage["type"] = "sync_offline_messages";
+    wsMessage["payload"] = payload;
+
+    QString jsonString = QJsonDocument(wsMessage).toJson(QJsonDocument::Compact);
+    qDebug() << "WSS发送消息 >>" << jsonString;
+    m_wss->sendTextMessage(jsonString);
+}
+
+void NetworkManager::confirmMessagesSynced(const QList<qint64>& messageIds) {
+    QJsonArray idsArray;
+    for (qint64 id : messageIds) {
+        idsArray.append(id);
+    }
+
+    QJsonObject payload;
+    payload["message_ids"] = idsArray;
+
+    QJsonObject wsMessage;
+    wsMessage["type"] = "confirm_messages_synced";
     wsMessage["payload"] = payload;
 
     QString jsonString = QJsonDocument(wsMessage).toJson(QJsonDocument::Compact);
