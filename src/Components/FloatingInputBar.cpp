@@ -8,6 +8,8 @@
 #include <QPainterPath>
 
 #include "Components/FloatingInputBar.h"
+#include "View/Chat/VideoCallWidget.h"
+#include "Data/CurrentUser.h"
 
 /* variable --------------------------------------------------------------- 80 // ! ----------------------------- 120 */
 const QString FloatingInputBar::RESOURCE_PATH = ":/icon/";
@@ -253,6 +255,12 @@ void FloatingInputBar::mousePressEvent(QMouseEvent*event) {
         if (!filePath.isEmpty()) {
             emit sendImage(filePath);
         }
+    } else if (m_videoLabel->geometry().contains(pos)) {
+        // 点击视频按钮，弹出视频通话静态界面
+        auto *vc = new VideoCallWidget(nullptr);
+        // 使用当前用户作为本端名称（资源可在 VideoCallWidget 中替换为更合适的头像/名称）
+        vc->setAttribute(Qt::WA_DeleteOnClose);
+        vc->show();
     }
     QWidget::mousePressEvent(event);
 }
