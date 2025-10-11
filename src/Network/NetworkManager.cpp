@@ -197,9 +197,16 @@ void NetworkManager::onWssTextMessage(const QString& msg) {
         m_wss->sendTextMessage(jsonString);
 
         return;
+    } else if (type == "login_success") {
+        // 登录成功，开始同步离线消息
+        qDebug() << "WebSocket登录成功，开始同步离线消息";
+        syncOfflineMessages(1, 100);  // 从第1页开始，每页100条
     } else if (type == "chat") {
         // 使用MessageHandler处理聊天消息
         MessageHandler::instance().handleReceivedMessage(obj);
+    } else if (type == "offline_messages") {
+        // 处理离线消息同步
+        MessageHandler::instance().handleOfflineMessages(obj);
     } else if (type == "friend_request_response") {
         // 处理好友请求响应
         QJsonObject payload = obj["payload"].toObject();
@@ -245,4 +252,18 @@ void NetworkManager::onWssErrorOccurred(QAbstractSocket::SocketError) {
 void NetworkManager::onSslErrors(const QList <QSslError>& errors) {
     Q_UNUSED(errors);
     m_wss->ignoreSslErrors();  // 完全忽略
+}
+
+void NetworkManager::syncOfflineMessages(int page, int pageSize) {
+    QJsonObject payload;
+    payload["page"] = page;
+    payload["page_size"] = pageSize;
+
+    QJsonObject wsMessage;
+    wsMessage["type"] = "sync_offline_messages";
+    wsMessage["payload"] = payload;
+
+    QString jsonString = QJsonDocument(wsMessage).toJson(QJsonDocument::Compact);
+    qDebug() << "WSS发送消息 >>" << jsonString;
+    m_wss->sendTextMessage(jsonString);
 }

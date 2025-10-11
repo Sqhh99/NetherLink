@@ -16,6 +16,8 @@ class MessageHandler : public QObject {
 
         void handleReceivedMessage(const QJsonObject& messageObj);
 
+        void handleOfflineMessages(const QJsonObject& messageObj);
+
         void setCurrentChatId(const QString& id);
 
     signals:

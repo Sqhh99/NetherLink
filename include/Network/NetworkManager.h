@@ -27,6 +27,8 @@ class NetworkManager : public QObject {
 
         void closeWss();
 
+        void syncOfflineMessages(int page = 1, int pageSize = 100);
+
         // Contacts
         void reloadContacts();
 

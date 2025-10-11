@@ -3,7 +3,10 @@
 #include "Data/GroupRepository.h"
 #include "Data/MessageRepository.h"
 #include "Data/UserRepository.h"
+#include "Network/NetworkManager.h"
 #include "View/Chat/MessageHandler.h"
+
+#include <QJsonArray>
 
 /* function --------------------------------------------------------------- 80 // ! ----------------------------- 120 */
 
@@ -98,4 +101,48 @@ QDateTime MessageHandler::parseTimestamp(const QString& timestamp) {
 
 void MessageHandler::setCurrentChatId(const QString& id) {
     currentChatId = id;
+}
+
+void MessageHandler::handleOfflineMessages(const QJsonObject& messageObj) {
+    QJsonObject payload = messageObj["payload"].toObject();
+    QJsonArray messagesArray = payload["messages"].toArray();
+    int count = payload["count"].toInt();
+
+    qDebug() << "收到离线消息，共" << count << "条";
+
+    for (const QJsonValue& value : messagesArray) {
+        QJsonObject msgObj = value.toObject();
+        
+        // 构造payload对象，模拟接收到的聊天消息格式
+        QJsonObject chatPayload;
+        chatPayload["from"] = msgObj["sender_id"].toString();
+        chatPayload["content"] = msgObj["content"].toString();
+        chatPayload["type"] = msgObj["type"].toString();
+        chatPayload["extra"] = msgObj["extra"].toString();
+        chatPayload["timestamp"] = msgObj["timestamp"].toString();
+        
+        // 解析conversation_id，判断是否群聊
+        QString conversationId = msgObj["conversation_id"].toString();
+        bool isGroup = conversationId.startsWith("group_");  // 假设群聊ID以group_开头
+        chatPayload["is_group"] = isGroup;
+        if (isGroup) {
+            chatPayload["conversation"] = conversationId;
+        }
+
+        // 使用现有的handleReceivedMessage处理每条消息
+        QJsonObject chatMessageObj;
+        chatMessageObj["type"] = "chat";
+        chatMessageObj["payload"] = chatPayload;
+        
+        handleReceivedMessage(chatMessageObj);
+    }
+
+    // 如果还有更多消息，继续请求下一页
+    // 假设当前页是1，检查是否需要下一页
+    int currentPage = 1;  // 这里可以从payload中获取，但API中没有返回页码，简化处理
+    int pageSize = 100;
+    if (messagesArray.size() == pageSize && count > currentPage * pageSize) {
+        // 请求下一页
+        NetworkManager::instance().syncOfflineMessages(currentPage + 1, pageSize);
+    }
 }
