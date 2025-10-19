@@ -27,7 +27,7 @@ class MainWindow : public FramelessWindow {
 
         void mousePressEvent(QMouseEvent*event) override;
 
-        bool eventFilter(QObject* watched, QEvent* ev);
+        bool eventFilter(QObject* watched, QEvent* ev) override;
 
     private slots:
         void onBarItemClicked(ApplicationBarItem* item);

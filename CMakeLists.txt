@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(NetherLink-Client VERSION 1.0.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOUIC ON)
@@ -75,6 +75,18 @@ add_definitions(
 file(GLOB_RECURSE INCLUDES "include/*.h" "include/**/*.h")
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/**/*.cpp" "src/*.cc" "src/**/*.cc")
 
+include_directories(SYSTEM 
+    ${WEBRTC_SRC_DIR}
+    "${WEBRTC_SRC_DIR}/third_party/abseil-cpp"
+    "${WEBRTC_SRC_DIR}/third_party/libyuv/include"
+    "${JSONCPP_INSTALL_DIR}/include"
+    "${WEBRTC_SRC_DIR}/api"
+    "${WEBRTC_SRC_DIR}/rtc_base"
+    "${WEBRTC_SRC_DIR}/media"
+    "${WEBRTC_SRC_DIR}/p2p"
+    "${WEBRTC_SRC_DIR}/pc"
+)
+
 # 创建可执行文件
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(NetherLink-Client WIN32
@@ -95,16 +107,6 @@ endif()
 target_include_directories(NetherLink-Client PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    SYSTEM 
-    ${WEBRTC_SRC_DIR}
-    "${WEBRTC_SRC_DIR}/third_party/abseil-cpp"
-    "${WEBRTC_SRC_DIR}/third_party/libyuv/include"
-    "${JSONCPP_INSTALL_DIR}/include"
-    "${WEBRTC_SRC_DIR}/api"
-    "${WEBRTC_SRC_DIR}/rtc_base"
-    "${WEBRTC_SRC_DIR}/media"
-    "${WEBRTC_SRC_DIR}/p2p"
-    "${WEBRTC_SRC_DIR}/pc"
 )
 
 # 配置链接目录

@@ -121,7 +121,7 @@ void MainWnd::CreateConnectionPanel() {
   QLabel* server_label = new QLabel("信令服务器:");
   layout->addWidget(server_label);
   
-  server_url_edit_ = new QLineEdit("ws://localhost:8080/ws");
+  server_url_edit_ = new QLineEdit("ws://localhost:8081/ws/webrtc");
   server_url_edit_->setMinimumWidth(250);
   layout->addWidget(server_url_edit_);
   

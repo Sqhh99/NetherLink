@@ -47,8 +47,18 @@ void SignalClient::Connect(const QString& server_url, const QString& client_id) 
   qDebug() << "Connecting to signaling server:" << server_url_;
   qDebug() << "Client ID:" << client_id_;
   
+  // 构建完整的URL,添加uid参数
+  QString full_url = server_url;
+  if (!full_url.contains("?")) {
+    full_url += "?uid=" + client_id_;
+  } else {
+    full_url += "&uid=" + client_id_;
+  }
+  
+  qDebug() << "Full URL with uid:" << full_url;
+  
   manual_disconnect_ = false;
-  websocket_->open(QUrl(server_url_));
+  websocket_->open(QUrl(full_url));
 }
 
 void SignalClient::Disconnect() {
