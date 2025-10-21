@@ -12,6 +12,7 @@
 #include "Data/DatabaseManager.h"
 #include "Data/GroupRepository.h"
 #include "Data/UserRepository.h"
+#include "Manager/VideoCallManager.h"
 #include "Network/NetworkConfig.h"
 #include "Network/NetworkManager.h"
 #include "View/Mainwindow/Login.h"
@@ -492,6 +493,15 @@ void Login::onLoginSuccess(const QString& uid, const QString& token)
     qDebug() << "CurrentUser已设置当前id" << uid;
     DatabaseManager::instance().initUserDatabase(uid);
     qDebug() << "DatabaseManager已设置当前id" << uid;
+    
+    // 初始化视频通话管理器
+    QString webrtcServer = NetworkConfig::instance().getWebRTCServerUrl();
+    if (!webrtcServer.isEmpty()) {
+        VideoCallManager::instance()->initialize(webrtcServer, uid);
+        qDebug() << "VideoCallManager已初始化，服务器:" << webrtcServer << "用户ID:" << uid;
+    } else {
+        qWarning() << "WebRTC服务器地址未配置";
+    }
 
     // 创建异步加载观察器
     if (!contactsWatcher) {

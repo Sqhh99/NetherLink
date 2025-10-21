@@ -84,6 +84,12 @@ ChatArea::ChatArea(QWidget*parent) : QWidget(parent), unreadMessageCount(0), isA
     connect(newMessageNotifier, &NewMessageNotifier::clicked, this, &ChatArea::onNewMessageNotifierClicked);
     connect(inputBar, &FloatingInputBar::sendImage, this, &ChatArea::onSendImage);
     connect(inputBar, &FloatingInputBar::sendText, this, &ChatArea::onSendText);
+    connect(inputBar, &FloatingInputBar::videoCallRequested, this, [this]() {
+        // 触发视频通话请求
+        if (!messageId.isEmpty()) {
+            emit videoCallRequested(messageId);
+        }
+    });
 
     // 连接MessageHandler信号
     connect(&MessageHandler::instance(), &MessageHandler::messageReceived, this, &ChatArea::onMessageReceived);

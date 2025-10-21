@@ -32,6 +32,10 @@ class NetworkConfig : public QObject {
 
         QString getWebSocketAddress() const;
 
+        QString getWebRTCServerUrl() const {
+            return (m_webrtcServerUrl);
+        }
+
         // 重新加载配置
         bool reloadConfig();
 
@@ -51,6 +55,7 @@ class NetworkConfig : public QObject {
         QString m_serverIP;
         int m_httpPort;
         int m_webSocketPort;
+        QString m_webrtcServerUrl;
 };
 
 #endif /* INCLUDE_NETWORK_NETWORK_CONFIG */

@@ -23,6 +23,8 @@ class FloatingInputBar : public QWidget {
 
         void sendText(const QString &text);
 
+        void videoCallRequested();
+
     protected:
         void paintEvent(QPaintEvent*event) override;
 

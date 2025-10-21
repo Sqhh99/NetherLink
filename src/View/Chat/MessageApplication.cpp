@@ -3,6 +3,7 @@
 #include <QBoxLayout>
 
 #include "Data/MessageRepository.h"
+#include "Manager/VideoCallManager.h"
 #include "View/Chat/MessageApplication.h"
 
 /* function --------------------------------------------------------------- 80 // ! ----------------------------- 120 */
@@ -34,6 +35,12 @@ MessageApplication::MessageApplication(QWidget* parent) : QWidget(parent) {
     m_rightStack->setCurrentWidget(m_defaultPage);
     m_chatArea = new ChatArea(this);
     m_rightStack->addWidget(m_chatArea);
+
+    // 连接视频通话信号
+    connect(m_chatArea, &ChatArea::videoCallRequested, this, [](const QString& targetUserId) {
+        qDebug() << "发起视频通话到用户:" << targetUserId;
+        VideoCallManager::instance()->startCall(targetUserId);
+    });
 
     // 整体分割
     m_splitter = new QSplitter(Qt::Horizontal, this);

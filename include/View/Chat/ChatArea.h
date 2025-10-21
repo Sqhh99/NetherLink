@@ -32,6 +32,9 @@ class ChatArea : public QWidget {
 
         void clearAll();
 
+    signals:
+        void videoCallRequested(const QString& targetUserId);
+
     protected:
         void resizeEvent(QResizeEvent*event) override;
 

@@ -245,15 +245,22 @@ void SignalClient::OnReconnectTimer() {
 
 void SignalClient::SendMessage(const QJsonObject& message) {
   if (!is_connected_ || websocket_->state() != QAbstractSocket::ConnectedState) {
-    qWarning() << "Cannot send message: not connected";
+    qWarning() << "Cannot send message: not connected, state:" << websocket_->state();
     return;
   }
   
   QJsonDocument doc(message);
   QString json_string = doc.toJson(QJsonDocument::Compact);
   
-  qDebug() << "Sending message:" << message["type"].toString();
-  websocket_->sendTextMessage(json_string);
+  QString msg_type = message["type"].toString();
+  qDebug() << "Sending message:" << msg_type << "length:" << json_string.length() << "bytes";
+  
+  qint64 bytes_written = websocket_->sendTextMessage(json_string);
+  if (bytes_written < 0) {
+    qWarning() << "Failed to send message:" << msg_type;
+  } else {
+    qDebug() << "Message sent successfully:" << msg_type << "(" << bytes_written << "bytes)";
+  }
 }
 
 void SignalClient::HandleMessage(const QJsonObject& message) {

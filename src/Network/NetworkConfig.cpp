@@ -12,6 +12,7 @@
 NetworkConfig::NetworkConfig(QObject* parent) : QObject(parent), m_serverIP("127.0.0.1") // 默认值
     , m_httpPort(8080) // 默认值
     , m_webSocketPort(8081) // 默认值
+    , m_webrtcServerUrl("ws://127.0.0.1:8081/ws/webrtc") // 默认值
 {
     loadConfig();
 }
@@ -67,6 +68,10 @@ bool NetworkConfig::loadConfig() {
 
     if (serverConfig.contains("websocket_port")) {
         m_webSocketPort = serverConfig["websocket_port"].toInt();
+    }
+
+    if (serverConfig.contains("webrtc_server")) {
+        m_webrtcServerUrl = serverConfig["webrtc_server"].toString();
     }
     return (true);
 }
