@@ -67,6 +67,8 @@ void VideoCallDialog::stopLocalVideo() {
     if (local_renderer_) {
         local_renderer_->Stop();
         local_renderer_->hide();
+        local_renderer_->deleteLater();
+        local_renderer_ = nullptr;
     }
 }
 
@@ -76,6 +78,8 @@ void VideoCallDialog::stopRemoteVideo() {
     if (remote_renderer_) {
         remote_renderer_->Stop();
         remote_renderer_->hide();
+        // 注意:不要删除remote_renderer_,因为它是在setupUI中创建的,作为布局的一部分
+        // 只需要Stop和hide即可,下次setRemoteVideoTrack会重新设置track
         call_status_label_->show();
     }
 }
