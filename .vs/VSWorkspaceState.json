@@ -1,0 +1,17 @@
+{
+  "OutputFoldersPerTargetSystem": {
+    "Local Machine": [
+      "out\\build\\x64-Clang-Release",
+      "out\\install\\x64-Clang-Release"
+    ]
+  },
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\Utils",
+    "\\src\\WebRTC",
+    "\\tool"
+  ],
+  "SelectedNode": "\\src\\WebRTC\\webrtcengine.cc",
+  "PreviewInSolutionExplorer": false
+}

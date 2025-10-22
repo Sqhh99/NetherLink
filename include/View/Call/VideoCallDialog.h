@@ -9,7 +9,10 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <QTimer>
+#include <QTime>
 #include <memory>
+#include "Utils/FramelessWindow.h"
 
 // Fix Qt emit macro conflict with WebRTC sigslot
 #ifdef emit
@@ -39,7 +42,7 @@ class VideoRenderer;
  * - 通话控制按钮(挂断、静音等)
  * - 通话状态信息
  */
-class VideoCallDialog : public QDialog {
+class VideoCallDialog : public FramelessWindow {
     Q_OBJECT
 
 public:
@@ -82,17 +85,26 @@ signals:
      */
     void hangupClicked();
 
+private slots:
+    void updateCallTime();
+
 protected:
     void resizeEvent(QResizeEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
 
 private:
     void setupUI();
+    void setupTitleBar();
     void layoutLocalVideo();
     QString getCallStateString(CallState state) const;
 
 private:
     // UI 组件
+    QWidget* title_bar_;
+    QPushButton* btn_minimize_;
+    QPushButton* btn_maximize_;
+    QPushButton* btn_pin_;
+    QPushButton* btn_close_;
     QWidget* video_container_;
     VideoRenderer* local_renderer_;
     VideoRenderer* remote_renderer_;
@@ -106,6 +118,9 @@ private:
     // 通话信息
     QString peer_name_;
     CallState call_state_;
+    QTimer* call_timer_;
+    QTime call_start_time_;
+    bool is_pinned_;
 };
 
 #endif /* INCLUDE_VIEW_CALL_VIDEO_CALL_DIALOG */

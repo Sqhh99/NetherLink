@@ -3,6 +3,7 @@
 #include "Manager/VideoCallManager.h"
 #include "View/Call/VideoCallDialog.h"
 #include "View/Call/IncomingCallDialog.h"
+#include "Data/UserRepository.h"
 
 // Fix Qt emit macro conflict with WebRTC sigslot
 #ifdef emit
@@ -283,11 +284,17 @@ void VideoCallManager::OnIncomingCall(const std::string& caller_id) {
     
     incoming_caller_id_ = qcaller_id;
     
+    // 获取呼叫方的昵称
+    QString caller_name = UserRepository::instance().getUserName(qcaller_id);
+    if (caller_name.isEmpty()) {
+        caller_name = qcaller_id;  // 如果没找到昵称，使用ID
+    }
+    
     // 发射信号
     emit incomingCall(qcaller_id);
     
-    // 显示来电对话框
-    IncomingCallDialog* dialog = new IncomingCallDialog(qcaller_id, nullptr);
+    // 显示来电对话框，传入昵称而不是ID
+    IncomingCallDialog* dialog = new IncomingCallDialog(caller_name, nullptr);
     
     connect(dialog, &IncomingCallDialog::accepted, this, [this]() {
         acceptCall();
@@ -313,8 +320,13 @@ void VideoCallManager::createCallDialog() {
     qDebug() << "VideoCallManager: Creating call dialog";
     
     call_dialog_ = new VideoCallDialog(nullptr);
-    call_dialog_->setWindowTitle("视频通话");
-    call_dialog_->setPeerName(current_peer_id_);
+    
+    // 获取对方的昵称
+    QString peer_name = UserRepository::instance().getUserName(current_peer_id_);
+    if (peer_name.isEmpty()) {
+        peer_name = current_peer_id_;  // 如果没找到昵称，使用ID
+    }
+    call_dialog_->setPeerName(peer_name);
     
     // 连接挂断信号
     connect(call_dialog_, &VideoCallDialog::hangupClicked, this, &VideoCallManager::endCall);

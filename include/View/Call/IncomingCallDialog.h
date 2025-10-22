@@ -9,6 +9,8 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QTimer>
+#include <QPropertyAnimation>
+#include <QGraphicsOpacityEffect>
 
 /* class ------------------------------------------------------------------ 80 // ! ----------------------------- 120 */
 
@@ -44,17 +46,22 @@ private slots:
     void onAcceptClicked();
     void onRejectClicked();
     void onTimeout();
+    void updateBlinkAnimation();
 
 private:
     void setupUI();
+    void startBlinkAnimation();
 
 private:
     QString caller_id_;
     QLabel* caller_label_;
     QLabel* status_label_;
+    QLabel* icon_label_;
     QPushButton* accept_button_;
     QPushButton* reject_button_;
     QTimer* timeout_timer_;
+    QTimer* blink_timer_;
+    bool blink_state_;
     
     static constexpr int RING_TIMEOUT_MS = 30000; // 30秒超时
 };
