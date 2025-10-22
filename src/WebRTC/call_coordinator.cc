@@ -70,9 +70,9 @@ void CallCoordinator::Shutdown() {
   current_peer_id_.clear();
 }
 
-void CallCoordinator::ConnectToSignalServer(const std::string& url, const std::string& client_id) {
+void CallCoordinator::ConnectToSignalServer(const std::string& url, const std::string& client_id, const std::string& token) {
   if (signal_client_) {
-    signal_client_->Connect(QString::fromStdString(url), QString::fromStdString(client_id));
+    signal_client_->Connect(QString::fromStdString(url), QString::fromStdString(client_id), QString::fromStdString(token));
   }
 }
 

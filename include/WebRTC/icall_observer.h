@@ -47,7 +47,7 @@ class ICallController {
   virtual void Shutdown() = 0;
   
   // 信令连接
-  virtual void ConnectToSignalServer(const std::string& url, const std::string& client_id) = 0;
+  virtual void ConnectToSignalServer(const std::string& url, const std::string& client_id, const std::string& token = "") = 0;
   virtual void DisconnectFromSignalServer() = 0;
   
   // 呼叫控制

@@ -4,6 +4,7 @@
 #include "View/Call/VideoCallDialog.h"
 #include "View/Call/IncomingCallDialog.h"
 #include "Data/UserRepository.h"
+#include "Data/CurrentUser.h"
 
 // Fix Qt emit macro conflict with WebRTC sigslot
 #ifdef emit
@@ -77,8 +78,14 @@ bool VideoCallManager::initialize(const QString& server_url, const QString& clie
         return false;
     }
     
-    // 连接到信令服务器
-    coordinator_->ConnectToSignalServer(server_url.toStdString(), client_id.toStdString());
+    // 获取当前用户的 token
+    QString token = CurrentUser::instance().getToken();
+    if (token.isEmpty()) {
+        qWarning() << "VideoCallManager: No token found, WebRTC connection may fail authentication";
+    }
+    
+    // 连接到信令服务器，传递 token
+    coordinator_->ConnectToSignalServer(server_url.toStdString(), client_id.toStdString(), token.toStdString());
     
     is_initialized_ = true;
     

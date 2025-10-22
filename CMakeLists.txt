@@ -89,7 +89,7 @@ include_directories(SYSTEM
 
 # 创建可执行文件
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(NetherLink-Client WIN32
+    qt_add_executable(NetherLink-Client
         MANUAL_FINALIZATION
         ${INCLUDES}
         ${SOURCES}
@@ -257,6 +257,6 @@ else(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/Release")
 endif()
 
-set_target_properties(NetherLink-Client PROPERTIES
-    LINK_FLAGS "/SUBSYSTEM:CONSOLE"
-)
+# set_target_properties(NetherLink-Client PROPERTIES
+#     LINK_FLAGS "/SUBSYSTEM:CONSOLE"
+# )

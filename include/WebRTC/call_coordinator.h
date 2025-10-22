@@ -42,7 +42,7 @@ class CallCoordinator : public WebRTCEngineObserver,
   // ICallController 实现
   bool Initialize() override;
   void Shutdown() override;
-  void ConnectToSignalServer(const std::string& url, const std::string& client_id) override;
+  void ConnectToSignalServer(const std::string& url, const std::string& client_id, const std::string& token = "") override;
   void DisconnectFromSignalServer() override;
   void StartCall(const std::string& peer_id) override;
   void AcceptCall() override;

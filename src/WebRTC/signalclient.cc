@@ -28,13 +28,14 @@ SignalClient::~SignalClient() {
   Disconnect();
 }
 
-void SignalClient::Connect(const QString& server_url, const QString& client_id) {
+void SignalClient::Connect(const QString& server_url, const QString& client_id, const QString& token) {
   if (is_connected_) {
     qDebug() << "Already connected to signaling server";
     return;
   }
   
   server_url_ = server_url;
+  token_ = token;
   
   // 生成或使用提供的客户端ID
   if (client_id.isEmpty()) {
@@ -47,7 +48,7 @@ void SignalClient::Connect(const QString& server_url, const QString& client_id) 
   qDebug() << "Connecting to signaling server:" << server_url_;
   qDebug() << "Client ID:" << client_id_;
   
-  // 构建完整的URL,添加uid参数
+  // 构建完整的URL,添加uid和token参数
   QString full_url = server_url;
   if (!full_url.contains("?")) {
     full_url += "?uid=" + client_id_;
@@ -55,7 +56,15 @@ void SignalClient::Connect(const QString& server_url, const QString& client_id) 
     full_url += "&uid=" + client_id_;
   }
   
-  qDebug() << "Full URL with uid:" << full_url;
+  // 添加token参数(如果提供)
+  if (!token_.isEmpty()) {
+    full_url += "&token=" + token_;
+    qDebug() << "Using token for authentication";
+  } else {
+    qDebug() << "Warning: No token provided for WebRTC connection";
+  }
+  
+  qDebug() << "Full URL (token hidden):" << server_url + "?uid=" + client_id_;
   
   manual_disconnect_ = false;
   websocket_->open(QUrl(full_url));
@@ -240,7 +249,7 @@ void SignalClient::OnTextMessageReceived(const QString& message) {
 
 void SignalClient::OnReconnectTimer() {
   qDebug() << "Attempting reconnection, attempt" << reconnect_attempts_;
-  Connect(server_url_, client_id_);
+  Connect(server_url_, client_id_, token_);
 }
 
 void SignalClient::SendMessage(const QJsonObject& message) {

@@ -71,7 +71,7 @@ class SignalClient : public QObject {
   ~SignalClient() override;
 
   // 连接到信令服务器
-  void Connect(const QString& server_url, const QString& client_id = QString());
+  void Connect(const QString& server_url, const QString& client_id = QString(), const QString& token = QString());
   void Disconnect();
   bool IsConnected() const;
   
@@ -117,6 +117,7 @@ class SignalClient : public QObject {
   SignalClientObserver* observer_;
   QString server_url_;
   QString client_id_;
+  QString token_;  // JWT token for authentication
   bool is_connected_;
   bool manual_disconnect_;
   int reconnect_attempts_;
