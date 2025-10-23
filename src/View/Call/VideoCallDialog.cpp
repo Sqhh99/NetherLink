@@ -224,21 +224,21 @@ void VideoCallDialog::setupUI() {
     
     // 挂断按钮 - 使用图标
     hangup_button_ = new QPushButton(control_bar);
-    hangup_button_->setFixedSize(85, 85);
+    hangup_button_->setFixedSize(70, 70);
     hangup_button_->setCursor(Qt::PointingHandCursor);
     hangup_button_->setIcon(QIcon(":/icon/hang_up.png"));
-    hangup_button_->setIconSize(QSize(40, 40));
+    hangup_button_->setIconSize(QSize(35, 35));
     hangup_button_->setStyleSheet(
         "QPushButton {"
         "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
         "       stop:0 #e74c3c, stop:1 #c0392b);"
-        "   border-radius: 42px;"
-        "   border: 3px solid #a93226;"
+        "   border-radius: 35px;"
+        "   border: 2px solid #a93226;"
         "}"
         "QPushButton:hover {"
         "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
         "       stop:0 #ec7063, stop:1 #e74c3c);"
-        "   border: 3px solid #cb4335;"
+        "   border: 2px solid #cb4335;"
         "}"
         "QPushButton:pressed {"
         "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
