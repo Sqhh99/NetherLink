@@ -302,17 +302,19 @@ void VideoCallManager::OnIncomingCall(const std::string& caller_id) {
     
     // 显示来电对话框，传入昵称而不是ID
     IncomingCallDialog* dialog = new IncomingCallDialog(caller_name, nullptr);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
     
-    connect(dialog, &IncomingCallDialog::accepted, this, [this]() {
+    connect(dialog, &IncomingCallDialog::accepted, this, [this, dialog]() {
         acceptCall();
+        dialog->close();
     });
     
-    connect(dialog, &IncomingCallDialog::rejected, this, [this]() {
+    connect(dialog, &IncomingCallDialog::rejected, this, [this, dialog]() {
         rejectCall("用户拒绝");
+        dialog->close();
     });
     
-    dialog->exec();
-    dialog->deleteLater();
+    dialog->show();
 }
 
 // ============================================================================

@@ -1,0 +1,475 @@
+﻿/* include ---------------------------------------------------------------- 80 // ! ----------------------------- 120 */
+
+#include "View/Call/VideoCallDialog.h"
+#include "WebRTC/videorenderer.h"
+
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QCloseEvent>
+#include <QDebug>
+#include <QIcon>
+
+/* function --------------------------------------------------------------- 80 // ! ----------------------------- 120 */
+
+VideoCallDialog::VideoCallDialog(QWidget* parent)
+    : FramelessWindow(parent),
+      local_renderer_(nullptr),
+      remote_renderer_(nullptr),
+      call_state_(CallState::Idle),
+      is_pinned_(false) {
+    
+    resize(800, 600);
+    
+    // 设置窗口标志（无边框、置顶等）
+    setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
+    setAttribute(Qt::WA_TranslucentBackground, false);
+    
+    setupUI();
+    
+    // 创建通话计时器
+    call_timer_ = new QTimer(this);
+    connect(call_timer_, &QTimer::timeout, this, &VideoCallDialog::updateCallTime);
+}
+
+VideoCallDialog::~VideoCallDialog() {
+    if (call_timer_) {
+        call_timer_->stop();
+    }
+    if (local_renderer_) {
+        local_renderer_->Stop();
+    }
+    if (remote_renderer_) {
+        remote_renderer_->Stop();
+    }
+}
+
+void VideoCallDialog::setPeerName(const QString& name) {
+    peer_name_ = name;
+    peer_name_label_->setText(name);
+}
+
+void VideoCallDialog::setLocalVideoTrack(webrtc::VideoTrackInterface* track) {
+    qDebug() << "VideoCallDialog: Setting local video track";
+    
+    if (!local_renderer_) {
+        local_renderer_ = new VideoRenderer(video_container_);
+        local_renderer_->setFixedSize(220, 165);
+        local_renderer_->setStyleSheet(
+            "VideoRenderer { "
+            "   border: 3px solid rgba(76, 175, 80, 0.6);"
+            "   border-radius: 12px;"
+            "   background-color: rgba(0, 0, 0, 0.8);"
+            "   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);"
+            "}"
+        );
+        local_renderer_->raise();
+        local_renderer_->show();
+    }
+    
+    local_renderer_->SetVideoTrack(track);
+    layoutLocalVideo();
+}
+
+void VideoCallDialog::setRemoteVideoTrack(webrtc::VideoTrackInterface* track) {
+    qDebug() << "VideoCallDialog: Setting remote video track";
+    
+    if (remote_renderer_) {
+        remote_renderer_->SetVideoTrack(track);
+        remote_renderer_->show();
+        call_status_label_->hide();
+    }
+}
+
+void VideoCallDialog::stopLocalVideo() {
+    qDebug() << "VideoCallDialog: Stopping local video";
+    
+    if (local_renderer_) {
+        local_renderer_->Stop();
+        local_renderer_->hide();
+        local_renderer_->deleteLater();
+        local_renderer_ = nullptr;
+    }
+}
+
+void VideoCallDialog::stopRemoteVideo() {
+    qDebug() << "VideoCallDialog: Stopping remote video";
+    
+    if (remote_renderer_) {
+        remote_renderer_->Stop();
+        remote_renderer_->hide();
+        // 注意:不要删除remote_renderer_,因为它是在setupUI中创建的,作为布局的一部分
+        // 只需要Stop和hide即可,下次setRemoteVideoTrack会重新设置track
+        call_status_label_->show();
+    }
+}
+
+void VideoCallDialog::updateCallState(CallState state, const QString& peer_id) {
+    qDebug() << "VideoCallDialog: updateCallState called with state:" << static_cast<int>(state) << "peer:" << peer_id;
+    call_state_ = state;
+    call_status_label_->setText(getCallStateString(state));
+    
+    // 如果连接成功,隐藏状态标签,显示视频,并启动计时器
+    if (state == CallState::Connected) {
+        qDebug() << "VideoCallDialog: State is Connected, starting timer";
+        call_status_label_->hide();
+        if (remote_renderer_) {
+            remote_renderer_->show();
+        }
+        // 启动通话计时器
+        call_start_time_ = QTime::currentTime();
+        call_time_label_->setText("00:00");
+        call_timer_->start(1000);  // 每秒更新一次
+        qDebug() << "VideoCallDialog: Timer started, start time:" << call_start_time_.toString();
+    } else if (state == CallState::Idle || state == CallState::Ending) {
+        qDebug() << "VideoCallDialog: State is Idle or Ending, stopping timer";
+        // 停止计时器
+        call_timer_->stop();
+        call_time_label_->setText("00:00");
+    }
+}
+
+void VideoCallDialog::setupUI() {
+    QVBoxLayout* main_layout = new QVBoxLayout(this);
+    main_layout->setContentsMargins(0, 0, 0, 0);
+    main_layout->setSpacing(0);
+    
+    // 设置对话框样式
+    setStyleSheet("VideoCallDialog { background-color: #1a1a1a; }");
+    
+    // 创建自定义标题栏
+    setupTitleBar();
+    main_layout->addWidget(title_bar_);
+    
+    // 视频容器 - 增强版
+    video_container_ = new QWidget(this);
+    video_container_->setStyleSheet(
+        "QWidget { "
+        "   background: qradialgradient(cx:0.5, cy:0.5, radius:1, "
+        "       fx:0.5, fy:0.5, stop:0 #1a1a1a, stop:1 #000000);"
+        "}"
+    );
+    video_container_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    
+    QVBoxLayout* video_layout = new QVBoxLayout(video_container_);
+    video_layout->setContentsMargins(0, 0, 0, 0);
+    video_layout->setSpacing(0);
+    
+    // 远程视频渲染器
+    remote_renderer_ = new VideoRenderer(video_container_);
+    remote_renderer_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    remote_renderer_->setStyleSheet(
+        "VideoRenderer { "
+        "   border: 2px solid rgba(76, 175, 80, 0.3);"
+        "   border-radius: 8px;"
+        "}"
+    );
+    video_layout->addWidget(remote_renderer_);
+    remote_renderer_->hide();
+    
+    // 通话状态标签 - 更现代的设计
+    call_status_label_ = new QLabel("🔗 连接中...", video_container_);
+    call_status_label_->setAlignment(Qt::AlignCenter);
+    call_status_label_->setStyleSheet(
+        "QLabel { "
+        "   color: #ffffff; "
+        "   font-size: 24px; "
+        "   font-weight: 600;"
+        "   background-color: rgba(0, 0, 0, 0.7);"
+        "   padding: 30px 50px;"
+        "   border-radius: 20px;"
+        "   border: 2px solid rgba(255, 255, 255, 0.1);"
+        "}"
+    );
+    video_layout->addWidget(call_status_label_);
+    
+    main_layout->addWidget(video_container_);
+    
+    // 底部控制栏 - 现代化设计
+    QWidget* control_bar = new QWidget(this);
+    control_bar->setStyleSheet(
+        "QWidget { "
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "       stop:0 #232323, stop:1 #1a1a1a);"
+        "   border-top: 1px solid #3a3a3a;"
+        "}"
+    );
+    control_bar->setFixedHeight(100);
+    
+    QHBoxLayout* control_layout = new QHBoxLayout(control_bar);
+    control_layout->setContentsMargins(40, 15, 40, 15);
+    control_layout->setSpacing(25);
+    
+    control_layout->addStretch();
+    
+    // 静音按钮 - 使用图标
+    mute_button_ = new QPushButton(control_bar);
+    mute_button_->setFixedSize(70, 70);
+    mute_button_->setCursor(Qt::PointingHandCursor);
+    mute_button_->setIcon(QIcon(":/icon/Turn_on_the_microphone.png"));
+    mute_button_->setIconSize(QSize(35, 35));
+    mute_button_->setStyleSheet(
+        "QPushButton {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "       stop:0 #5a5a5a, stop:1 #4a4a4a);"
+        "   border-radius: 35px;"
+        "   border: 2px solid #6a6a6a;"
+        "}"
+        "QPushButton:hover {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "       stop:0 #6a6a6a, stop:1 #5a5a5a);"
+        "   border: 2px solid #7a7a7a;"
+        "}"
+        "QPushButton:pressed {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "       stop:0 #4a4a4a, stop:1 #3a3a3a);"
+        "}"
+    );
+    control_layout->addWidget(mute_button_);
+    
+    // 挂断按钮 - 使用图标
+    hangup_button_ = new QPushButton(control_bar);
+    hangup_button_->setFixedSize(85, 85);
+    hangup_button_->setCursor(Qt::PointingHandCursor);
+    hangup_button_->setIcon(QIcon(":/icon/hang_up.png"));
+    hangup_button_->setIconSize(QSize(40, 40));
+    hangup_button_->setStyleSheet(
+        "QPushButton {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "       stop:0 #e74c3c, stop:1 #c0392b);"
+        "   border-radius: 42px;"
+        "   border: 3px solid #a93226;"
+        "}"
+        "QPushButton:hover {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "       stop:0 #ec7063, stop:1 #e74c3c);"
+        "   border: 3px solid #cb4335;"
+        "}"
+        "QPushButton:pressed {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "       stop:0 #c0392b, stop:1 #a93226);"
+        "}"
+    );
+    connect(hangup_button_, &QPushButton::clicked, this, &VideoCallDialog::hangupClicked);
+    control_layout->addWidget(hangup_button_);
+    
+    // 摄像头按钮 - 使用图标
+    video_button_ = new QPushButton(control_bar);
+    video_button_->setFixedSize(70, 70);
+    video_button_->setCursor(Qt::PointingHandCursor);
+    video_button_->setIcon(QIcon(":/icon/start_video.png"));
+    video_button_->setIconSize(QSize(35, 35));
+    video_button_->setStyleSheet(
+        "QPushButton {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "       stop:0 #5a5a5a, stop:1 #4a4a4a);"
+        "   border-radius: 35px;"
+        "   border: 2px solid #6a6a6a;"
+        "}"
+        "QPushButton:hover {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "       stop:0 #6a6a6a, stop:1 #5a5a5a);"
+        "   border: 2px solid #7a7a7a;"
+        "}"
+        "QPushButton:pressed {"
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "       stop:0 #4a4a4a, stop:1 #3a3a3a);"
+        "}"
+    );
+    control_layout->addWidget(video_button_);
+    
+    control_layout->addStretch();
+    
+    main_layout->addWidget(control_bar);
+}
+
+void VideoCallDialog::layoutLocalVideo() {
+    if (!local_renderer_ || !video_container_) {
+        return;
+    }
+    
+    // 将本地视频放在右下角，增加边距
+    int margin = 20;
+    int x = video_container_->width() - local_renderer_->width() - margin;
+    int y = video_container_->height() - local_renderer_->height() - margin;
+    
+    local_renderer_->move(x, y);
+    local_renderer_->raise();
+}
+
+QString VideoCallDialog::getCallStateString(CallState state) const {
+    switch (state) {
+        case CallState::Idle:
+            return "空闲";
+        case CallState::Calling:
+            return "呼叫中...";
+        case CallState::Receiving:
+            return "来电中...";
+        case CallState::Connecting:
+            return "连接中...";
+        case CallState::Connected:
+            return "通话中";
+        case CallState::Ending:
+            return "结束中...";
+        default:
+            return "未知状态";
+    }
+}
+
+void VideoCallDialog::resizeEvent(QResizeEvent* event) {
+    FramelessWindow::resizeEvent(event);
+    layoutLocalVideo();
+}
+
+void VideoCallDialog::closeEvent(QCloseEvent* event) {
+    // 点击关闭按钮时发射挂断信号
+    emit hangupClicked();
+    event->accept();
+}
+
+void VideoCallDialog::setupTitleBar() {
+    title_bar_ = new QWidget(this);
+    title_bar_->setFixedHeight(60);
+    title_bar_->setStyleSheet(
+        "QWidget { "
+        "   background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "       stop:0 #2d2d2d, stop:1 #232323);"
+        "   border-bottom: 1px solid #3a3a3a;"
+        "}"
+    );
+    
+    QHBoxLayout* title_layout = new QHBoxLayout(title_bar_);
+    title_layout->setContentsMargins(20, 10, 10, 10);
+    title_layout->setSpacing(10);
+    
+    // 对方名称标签
+    peer_name_label_ = new QLabel("视频通话", title_bar_);
+    peer_name_label_->setStyleSheet(
+        "QLabel { "
+        "   color: #ffffff; "
+        "   font-size: 16px; "
+        "   font-weight: bold; "
+        "   padding: 5px 10px;"
+        "   background-color: rgba(255, 255, 255, 0.05);"
+        "   border-radius: 5px;"
+        "}"
+    );
+    title_layout->addWidget(peer_name_label_);
+    
+    title_layout->addStretch();
+    
+    // 通话时长标签
+    call_time_label_ = new QLabel("00:00", title_bar_);
+    call_time_label_->setStyleSheet(
+        "QLabel { "
+        "   color: #4CAF50; "
+        "   font-size: 14px; "
+        "   font-weight: 600;"
+        "   padding: 5px 15px;"
+        "   background-color: rgba(76, 175, 80, 0.1);"
+        "   border-radius: 12px;"
+        "   border: 1px solid rgba(76, 175, 80, 0.3);"
+        "}"
+    );
+    title_layout->addWidget(call_time_label_);
+    
+    // 按钮样式
+    QString btnStyle = 
+        "QPushButton {"
+        "   background-color: transparent;"
+        "   border: none;"
+        "   border-radius: 15px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: rgba(255, 255, 255, 0.1);"
+        "}";
+    
+    QString closeBtnStyle = 
+        "QPushButton {"
+        "   background-color: transparent;"
+        "   border: none;"
+        "   border-radius: 15px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #e74c3c;"
+        "}";
+    
+    int btnSize = 30;
+    
+    // 置顶按钮
+    btn_pin_ = new QPushButton(title_bar_);
+    btn_pin_->setIcon(QIcon(":/icon/zhiding.png"));
+    btn_pin_->setIconSize(QSize(16, 16));
+    btn_pin_->setFixedSize(btnSize, btnSize);
+    btn_pin_->setStyleSheet(btnStyle);
+    btn_pin_->setCursor(Qt::PointingHandCursor);
+    btn_pin_->setToolTip("置顶");
+    connect(btn_pin_, &QPushButton::clicked, this, [this]() {
+        is_pinned_ = !is_pinned_;
+        if (is_pinned_) {
+            setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+            btn_pin_->setIcon(QIcon(":/icon/yizhiding.png"));
+            btn_pin_->setToolTip("取消置顶");
+        } else {
+            setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
+            btn_pin_->setIcon(QIcon(":/icon/zhiding.png"));
+            btn_pin_->setToolTip("置顶");
+        }
+        show();  // 重新显示窗口（因为改变窗口标志会隐藏窗口）
+    });
+    title_layout->addWidget(btn_pin_);
+    
+    // 最小化按钮
+    btn_minimize_ = new QPushButton(title_bar_);
+    btn_minimize_->setIcon(QIcon(":/icon/minimize.png"));
+    btn_minimize_->setIconSize(QSize(16, 16));
+    btn_minimize_->setFixedSize(btnSize, btnSize);
+    btn_minimize_->setStyleSheet(btnStyle);
+    btn_minimize_->setCursor(Qt::PointingHandCursor);
+    btn_minimize_->setToolTip("最小化");
+    connect(btn_minimize_, &QPushButton::clicked, this, &QWidget::showMinimized);
+    title_layout->addWidget(btn_minimize_);
+    
+    // 最大化按钮
+    btn_maximize_ = new QPushButton(title_bar_);
+    btn_maximize_->setIcon(QIcon(":/icon/maximize.png"));
+    btn_maximize_->setIconSize(QSize(16, 16));
+    btn_maximize_->setFixedSize(btnSize, btnSize);
+    btn_maximize_->setStyleSheet(btnStyle);
+    btn_maximize_->setCursor(Qt::PointingHandCursor);
+    btn_maximize_->setToolTip("最大化");
+    connect(btn_maximize_, &QPushButton::clicked, this, [this]() {
+        if (isMaximized()) {
+            showNormal();
+        } else {
+            showMaximized();
+        }
+    });
+    title_layout->addWidget(btn_maximize_);
+    
+    // 关闭按钮
+    btn_close_ = new QPushButton(title_bar_);
+    btn_close_->setIcon(QIcon(":/icon/close.png"));
+    btn_close_->setIconSize(QSize(16, 16));
+    btn_close_->setFixedSize(btnSize, btnSize);
+    btn_close_->setStyleSheet(closeBtnStyle);
+    btn_close_->setCursor(Qt::PointingHandCursor);
+    btn_close_->setToolTip("关闭");
+    connect(btn_close_, &QPushButton::clicked, this, &QWidget::close);
+    title_layout->addWidget(btn_close_);
+}
+
+void VideoCallDialog::updateCallTime() {
+    qDebug() << "VideoCallDialog: updateCallTime called, current state:" << static_cast<int>(call_state_);
+    if (call_state_ != CallState::Connected) {
+        qDebug() << "VideoCallDialog: Not connected, skipping time update";
+        return;
+    }
+    
+    int elapsed_seconds = call_start_time_.secsTo(QTime::currentTime());
+    int minutes = elapsed_seconds / 60;
+    int seconds = elapsed_seconds % 60;
+    
+    QString time_str = QString("%1:%2").arg(minutes, 2, 10, QChar('0')).arg(seconds, 2, 10, QChar('0'));
+    call_time_label_->setText(time_str);
+    qDebug() << "VideoCallDialog: Time updated to:" << time_str;
+}

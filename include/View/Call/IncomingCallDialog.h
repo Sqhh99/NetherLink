@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QPropertyAnimation>
 #include <QGraphicsOpacityEffect>
+#include "Utils/FramelessWindow.h"
 
 /* class ------------------------------------------------------------------ 80 // ! ----------------------------- 120 */
 
@@ -19,7 +20,7 @@
  * 
  * 显示来电通知,提供接听和拒绝选项
  */
-class IncomingCallDialog : public QDialog {
+class IncomingCallDialog : public FramelessWindow {
     Q_OBJECT
 
 public:
@@ -50,10 +51,13 @@ private slots:
 
 private:
     void setupUI();
+    void setupTitleBar();
     void startBlinkAnimation();
 
 private:
     QString caller_id_;
+    QWidget* title_bar_;
+    QPushButton* btn_close_;
     QLabel* caller_label_;
     QLabel* status_label_;
     QLabel* icon_label_;

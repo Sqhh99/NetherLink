@@ -7,11 +7,15 @@
   },
   "ExpandedNodes": [
     "",
+    "\\doc",
     "\\src",
+    "\\src\\Network",
     "\\src\\Utils",
+    "\\src\\View",
+    "\\src\\View\\Call",
     "\\src\\WebRTC",
     "\\tool"
   ],
-  "SelectedNode": "\\src\\WebRTC\\webrtcengine.cc",
+  "SelectedNode": "\\src\\View\\Call\\IncomingCallDialog.cpp",
   "PreviewInSolutionExplorer": false
 }
