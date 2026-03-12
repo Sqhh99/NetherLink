@@ -1,8 +1,8 @@
 {
     "server": {
-        "ip": "127.0.0.1",
+        "ip": "113.46.159.182",
         "http_port": 8080,
         "websocket_port": 8081,
-        "webrtc_server": "ws://127.0.0.1:8081/ws/webrtc"
+        "webrtc_server": "ws://113.46.159.182:8081/ws/webrtc"
     }
 }

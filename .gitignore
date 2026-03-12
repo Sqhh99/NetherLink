@@ -39,3 +39,4 @@ doc/html/
 .cache/
 cmake-build-debug/
 CMakeLists.txt.user
+third_party

@@ -104,6 +104,7 @@ void VideoCallDialog::stopRemoteVideo() {
 }
 
 void VideoCallDialog::updateCallState(CallState state, const QString& peer_id) {
+    Q_UNUSED(peer_id);
     call_state_ = state;
     call_status_label_->setText(getCallStateString(state));
     

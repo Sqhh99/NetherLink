@@ -1,0 +1,104 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-build:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: Install Qt 6.10.0
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.10.0"
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          cache: true
+
+      - name: Export Qt env for build.cmd
+        shell: pwsh
+        run: |
+          if (-not $env:QT_ROOT_DIR) {
+            throw "QT_ROOT_DIR was not set by install-qt-action."
+          }
+          "QT_BIN_DIR=$env:QT_ROOT_DIR\bin" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Download latest WebRTC prebuilt package
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $release = Invoke-RestMethod `
+            -Headers @{
+              Authorization = "Bearer $env:GITHUB_TOKEN"
+              Accept = "application/vnd.github+json"
+              "X-GitHub-Api-Version" = "2022-11-28"
+            } `
+            -Uri "https://api.github.com/repos/shiguredo-webrtc-build/webrtc-build/releases/latest"
+
+          $asset = $release.assets |
+            Where-Object { $_.name -match '^webrtc\.windows_x86_64(\.zip|\.tar\.gz|\.tgz)$' } |
+            Select-Object -First 1
+
+          if (-not $asset) {
+            throw "No asset matching webrtc.windows_x86_64(.zip|.tar.gz|.tgz) was found in release $($release.tag_name)."
+          }
+
+          $archive = Join-Path $env:RUNNER_TEMP $asset.name
+          $targetDir = Join-Path $env:GITHUB_WORKSPACE 'third_party\webrtc.windows_x86_64'
+
+          if (Test-Path $targetDir) {
+            Remove-Item $targetDir -Recurse -Force
+          }
+          New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+
+          Invoke-WebRequest `
+            -Headers @{
+              Authorization = "Bearer $env:GITHUB_TOKEN"
+              Accept = "application/octet-stream"
+              "User-Agent" = "GitHub Actions"
+            } `
+            -Uri $asset.url `
+            -OutFile $archive
+
+          if ($asset.name.EndsWith('.zip')) {
+            Expand-Archive -Path $archive -DestinationPath $targetDir -Force
+          } elseif ($asset.name.EndsWith('.tar.gz') -or $asset.name.EndsWith('.tgz')) {
+            tar -xzf $archive -C $targetDir
+          } else {
+            throw "Unsupported archive format: $($asset.name)"
+          }
+
+          $expectedLib = Join-Path $targetDir 'webrtc\lib\webrtc.lib'
+          if (-not (Test-Path $expectedLib)) {
+            throw "Expected WebRTC library was not found at $expectedLib"
+          }
+
+      - name: Build release
+        shell: cmd
+        run: build.cmd release
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NetherLink-Client-windows-release
+          path: |
+            bin/Release/NetherLink-Client.exe
+            bin/Release/NetherLink-Client.pdb
+          if-no-files-found: error
