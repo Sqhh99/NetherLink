@@ -40,3 +40,5 @@ doc/html/
 cmake-build-debug/
 CMakeLists.txt.user
 third_party
+bin
+.qtcreator
